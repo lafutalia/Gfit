@@ -1,0 +1,28 @@
+This is the Gfit software package.
+
+Gfit stands for incorporating Gibbs free energy into interatomic potential fitting.
+
+----------------------------------------------------------------------
+
+**Gfit** is a set of tools to incorporate Gibbs free energy into interatomic 
+potential fitting. It is licensed under the terms of the MIT License, which allows 
+for flexibility in how the software is used and distributed.
+
+Online documentation
+--------------------
+
+Project website (built with Sphinx and published via GitHub Pages):
+
+	https://lafutalia.github.io/Gfit/
+
+You can find installation and usage guides there.
+
+The Gfit distribution includes the following files and directories:
+
+README                     this file
+LICENSE                    the MIT License
+docs-html                  documentation in HTML format
+src                        source code for fitting Fe-O EAM potential
+
+----------------------------------------------------------------------
+

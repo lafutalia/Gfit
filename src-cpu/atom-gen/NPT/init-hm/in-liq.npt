@@ -1,0 +1,86 @@
+units           metal
+boundary        p p p
+atom_style      atomic
+atom_modify     map array
+
+read_data       ${read_atom}
+set type 1 type/ratio 2 ${x} ${disp_seed}
+
+pair_style      eam/fs
+pair_coeff      * *   ${pot_file} ${element1} ${element2}
+
+neighbor        2.0 bin
+neigh_modify    delay 10
+
+timestep        0.001
+
+velocity all create ${templ} 1234567 mom yes dist gaussian
+
+variable nequil equal 500
+variable nrun1 equal 100
+variable nrunall equal 20000
+variable dump_step equal 200
+
+
+thermo          10000
+thermo_style    custom step temp etotal enthalpy press pe pxx pyy pzz
+thermo_modify norm no
+
+
+## NPT ensemble equ for nequil step 
+
+fix             1 all npt temp ${templ} ${templ} $(10.0*dt) ${ifiso} ${tarpress} ${tarpress} 1.5 fixedpoint 0 0 0
+run             ${nequil} 
+run             ${nequil}
+unfix           1
+
+
+
+reset_timestep 0 
+
+variable        myenthalpy equal enthalpy
+variable        mypress equal press
+variable        mype equal pe
+variable        mytemp equal temp
+variable        myke equal ke
+
+compute pv all pressure thermo_temp virial
+compute pk all pressure thermo_temp ke
+fix avetemp all ave/time 1 ${nrunall} ${nrunall} v_mytemp ave running
+fix avepresske all ave/time 1 ${nrunall} ${nrunall} c_pk  ave running     
+fix avepress all ave/time 1 ${nrunall} ${nrunall} v_mypress ave running
+fix aventhalpy all ave/time  1 ${nrunall} ${nrunall}  v_myenthalpy ave running
+fix avepe all ave/time  1 ${nrunall} ${nrunall}  v_mype mode scalar ave running
+fix aveke all ave/time 1 ${nrunall} ${nrunall} v_myke mode scalar ave running
+
+fix             2 all npt temp ${templ} ${templ} $(10.0*dt) ${ifiso} ${tarpress} ${tarpress} 1.5 fixedpoint 0 0 0
+dump            2 all custom ${dump_step} dump_all.atom id type xs ys zs
+dump_modify     2 sort id
+run             ${nrunall}
+undump          2
+unfix           2
+
+
+variable enthalpy0 equal f_aventhalpy
+variable aveT equal f_avetemp
+variable avePke equal f_avepresske/10000
+variable aveP equal f_avepress/10000
+variable avepe equal f_avepe
+variable aveke equal f_aveke
+variable peper equal ${avepe}/$(atoms)
+variable entper equal ${enthalpy0}/$(atoms)
+variable keper equal ${aveke}/$(atoms)
+variable eql_volper        equal vol/$(atoms)
+
+print """{
+  "press": ${aveP},
+  "presske":${avePke},
+  "temp": ${aveT},
+  "natom": $(atoms),
+  "enthalpy": ${entper},
+  "pe":${peper},
+  "ke":${keper},
+  "vol":${eql_volper},
+  "x":${x}
+}""" file thermo.json screen no
+

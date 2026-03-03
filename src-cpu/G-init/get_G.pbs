@@ -1,0 +1,27 @@
+#!/bin/bash
+
+
+workdir=$PWD
+T=$1;p=$2;type=$3;x=$4;LMP=$5
+run_dir=$workdir/"T=${T}_p=${p}_${type}_x=${x}"
+mkdir -p ${run_dir};mkdir -p ${run_dir}/eos;mkdir -p ${run_dir}/TI
+
+##如果type是liq，则使用UFM文件夹下面的文件,否则使用FL文件夹下面的文件
+if [ $type == "liq" ]; then
+    cp -r $workdir/UFM/eos/* ${run_dir}/eos
+    cp -r $workdir/UFM/TI/* ${run_dir}/TI
+    cp $workdir/UFM/init-atom/$type.data ${run_dir}/Fe.data
+    cp $workdir/UFM/G.py ${run_dir}
+else
+    cp -r $workdir/FL/eos/* ${run_dir}/eos
+    cp -r $workdir/FL/TI/* ${run_dir}/TI
+    cp $workdir/FL/init-atom/$type.data ${run_dir}/Fe.data
+fi
+
+cp pot_combine*.fs ${run_dir}/pot_combine.fs
+cd ${run_dir}/eos; ./lmp_eos.sh $T $p $type $x $LMP
+
+cd ${run_dir}/TI; ./lmp_ti.sh $T $x $LMP
+cd ${run_dir} 
+python G.py   
+ 

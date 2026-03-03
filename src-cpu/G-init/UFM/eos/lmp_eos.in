@@ -1,0 +1,101 @@
+# ------------------ INITIALIZATION ------------------
+units           metal
+boundary        p p p
+atom_style      atomic
+atom_modify     map array
+
+read_data       ${state}                        # 初始构型
+
+set type 2 type/ratio 1 1 12345
+set type 1 type/ratio 2 ${xx} 12345
+
+pair_style      eam/fs
+pair_coeff      * * ${pot_file} Fe O
+neighbor        2.0 bin
+neigh_modify    delay 10
+
+timestep        0.001
+variable        T equal ${temperature}           # 目标温度
+variable        avetime equal 10000            # 采样步数
+variable        kB equal 8.617333262e-5          # Boltzmann 常数 (eV/K)
+
+thermo          100
+thermo_style    custom step temp etotal press pe vol
+
+
+velocity        all create ${T} 12345 mom yes dist gaussian
+fix             rmcom all momentum 100 linear 1 1 1
+
+compute         c1 all temp/com
+
+fix             f1 all nph ${ifiso} ${tarpressure} ${tarpressure} 0.1
+fix             f2 all langevin ${T} ${T} 0.1 999 zero yes
+fix_modify      f1 temp c1
+fix_modify      f2 temp c1
+
+run             3000
+
+reset_timestep  0
+unfix           f1
+unfix           f2
+
+fix             f1 all nph ${ifiso} ${tarpressure} ${tarpressure} 0.1
+fix             f2 all langevin ${T} ${T} 0.1 999 zero yes
+fix_modify      f1 temp c1
+fix_modify      f2 temp c1
+
+
+compute         msdcom all msd com yes
+variable        msd equal c_msdcom[4]
+variable        pressure equal press
+variable        myenthalpy equal enthalpy
+variable        t1 equal temp
+variable        step1 equal step
+variable        V equal vol
+variable        mylx equal lx
+variable        myly equal ly
+variable        mylz equal lz
+
+fix             avemsd  all ave/time 1 ${avetime} ${avetime} v_msd
+fix             avep    all ave/time 1 ${avetime} ${avetime} v_pressure
+fix             avetemp all ave/time 1 ${avetime} ${avetime} v_t1
+fix             avevol  all ave/time 1 ${avetime} ${avetime} v_V
+fix             aveh  all ave/time 1 ${avetime} ${avetime} v_myenthalpy
+fix             avelx all ave/time 1 ${avetime} ${avetime} v_mylx
+fix             avely all ave/time 1 ${avetime} ${avetime} v_myly
+fix             avelz all ave/time 1 ${avetime} ${avetime} v_mylz
+
+
+fix             out all print 10 "${step1} ${msd}" screen no file msd.dat
+
+dump            d1 all custom 5000 dump.atom id type xs ys zs
+dump_modify     d1 sort id
+
+run             ${avetime}
+run             1  
+
+variable        avelx equal f_avelx
+variable        avely equal f_avely
+variable        avelz equal f_avelz
+
+
+
+variable        outmsd equal ${msd}
+variable        outp   equal f_avep
+variable        outtemp equal f_avetemp
+variable        outvol equal f_avevol
+variable        k equal (3*v_kB*${T})/v_outmsd
+variable        natom equal $(atoms)
+variable        enthalpy_ave equal  f_aveh
+print """{
+  "press": ${outp},
+  "temp": ${outtemp},
+  "msd": ${outmsd},
+  "enthalpy": ${enthalpy_ave},
+  "k": ${k},
+  "vol": ${outvol},
+  "natom": ${natom},
+  "Lx": ${avelx},
+  "Ly": ${avely},
+  "Lz": ${avelz}
+}""" file thermo.json screen no

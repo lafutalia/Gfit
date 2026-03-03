@@ -1,0 +1,16 @@
+Gfit sorce code 
+
+ Here is a list with descriptions:
+
+README              This file
+atom-gen            MD runner to generate atomic configurations at given conditions
+basis-fun           EAM fitting basis functions
+fit                 The code to fit EAM potential from the iteration matrix A
+G-init              The code to calculate Gibbs free energy of given EAM potential
+init                Initialization files for each iteration
+pot-ite             The initial potental and potentials during iteration are stored here
+rerun-code          The code to generate iteration matrix A
+target              Target properties data
+tools               Python tools and scripts for data processing
+fit.sh              The script to run the whole fitting process    
+fit.pbs             The PBS script to run the fitting on a cluster

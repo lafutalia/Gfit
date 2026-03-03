@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --output=fit.out
+#SBATCH --error=fit.err
+#SBATCH -N 1
+#SBATCH -p cpu
+#SBATCH --ntasks-per-node=64
+#SBATCH --job-name=fit
+#SBATCH -t 24:00:00
+
+
+module load lammps/2024.8.29-intel-2023
+export I_MPI_HYDRA_BOOTSTRAP=fork
+./fit.sh 

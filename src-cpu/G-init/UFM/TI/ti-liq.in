@@ -1,0 +1,127 @@
+units          metal
+boundary       p p p
+atom_style     atomic
+atom_modify    map array
+
+read_data      ${state}
+
+set type 2 type/ratio 1 1 12345
+set type 1 type/ratio 2 ${xx} 12345
+
+
+change_box all x final 0 ${lx} y final 0 ${ly} z final 0 ${lz} remap units box 
+
+
+fix            stru all momentum 100 linear 1 1 1
+neighbor       2.0 bin
+neigh_modify   delay 5
+
+timestep       0.001
+thermo         1000 
+thermo_style   custom step temp etotal pe ke press enthalpy vol
+
+variable       te    equal 2000
+variable       ts    equal 20000
+variable       tp    equal ${temperature}
+variable       kB    equal 0.0000861733034
+variable       puf   equal v_tp*v_kB*50   # fix p as 50
+variable       vol   equal vol
+
+### print Temperature and Pressure ###
+variable       mytemp  equal temp
+variable       mypress equal press
+#######
+
+# equilibrium with EAM
+pair_style     eam/fs
+pair_coeff     * * ${pot_file} Fe O 
+velocity       all create ${tp} 999 mom yes rot yes dist gaussian
+fix             f1 all nvt temp ${tp} ${tp} $(10.0*dt) 
+fix            avetemp all ave/time 1 ${te} ${te} v_mytemp
+fix            avepress all ave/time 1 ${te} ${te} v_mypress
+run            ${te}
+unfix          f1
+
+
+variable       aveT equal f_avetemp
+variable       aveP equal f_avepress
+print "Temperature and Press in EAM : ${aveT} ${aveP}" file TP.dat   ### check vol match press and temp
+unfix          avetemp
+unfix          avepress
+
+# forward
+variable       li    equal   1.0
+variable       lf    equal   0.0
+variable       flambda equal ramp(${li},${lf})
+variable       blambda equal 1.0-v_flambda
+pair_style     hybrid/scaled v_flambda eam/fs v_blambda eam/fs
+pair_coeff     * * eam/fs 1 ${pot_file} Fe O 
+pair_coeff     * * eam/fs 2 pot-ufm.fs Fe O 
+
+compute        c1 all pair eam/fs 1
+compute        c2 all pair eam/fs 2
+
+variable       step equal step
+variable       dU1 equal c_c1/atoms
+variable       dU2 equal c_c2/atoms
+
+thermo_style   custom step v_dU1 v_dU2 temp press
+thermo         100
+
+dump            d1 all custom 5000 dump.atom id type xs ys zs
+dump_modify     d1 sort id
+
+velocity       all create ${tp} 999 mom yes rot yes dist gaussian
+fix             f1 all nvt temp ${tp} ${tp} $(10.0*dt) 
+fix            f3 all print 1 "${dU1} ${dU2} ${flambda}" screen no file forward.dat
+run            ${ts}
+unfix          f1
+
+unfix          f3
+uncompute      c1
+uncompute      c2
+
+# equilibrium with UFM
+pair_style     eam/fs
+pair_coeff     * * pot-ufm.fs Fe O 
+thermo_style   custom step temp etotal pe ke press enthalpy vol
+thermo         1000
+fix             f1 all nvt temp ${tp} ${tp} $(10.0*dt) 
+run            ${te}
+unfix          f1
+
+
+
+# backward
+variable       flambda equal ramp(${lf},${li})
+variable       blambda equal 1.0-v_flambda
+pair_style     hybrid/scaled v_flambda eam/fs v_blambda eam/fs
+pair_coeff     * * eam/fs 1 ${pot_file} Fe O 
+pair_coeff     * * eam/fs 2 pot-ufm.fs Fe O 
+
+compute        c1 all pair eam/fs 1
+compute        c2 all pair eam/fs 2
+
+variable       step equal step
+variable       dU1 equal c_c1/atoms
+variable       dU2 equal c_c2/atoms
+
+thermo_style   custom step v_dU1 v_dU2  temp press
+thermo         100
+
+fix             f1 all nvt temp ${tp} ${tp} $(10.0*dt) 
+fix            f3 all print 1 "${dU1} ${dU2} ${flambda}" screen no file backward.dat
+run            ${ts}
+unfix          f1
+
+unfix          f3
+uncompute      c1
+uncompute      c2
+group          tp1   type  1
+group          tp2   type  2
+variable       n1    equal count(tp1)
+variable       n2    equal count(tp2)
+
+
+
+print "summary: ${vol} ${n1} ${n2} ${puf}"  file md.out 

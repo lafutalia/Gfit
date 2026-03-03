@@ -1,0 +1,47 @@
+units           metal
+boundary        p p p
+atom_style      atomic
+atom_modify     map array
+boundary	p p p
+read_data ${atomdir}/read.in
+pair_style      eam/fs
+pair_coeff      * *   ${pot_file} ${element1} ${element2}
+
+neighbor 1.0 nsq
+neigh_modify once no every 1 delay 0 check yes
+
+
+variable        myenthalpy equal enthalpy
+variable        mype equal pe
+variable        myvol equal vol
+
+compute pressk all pressure NULL virial
+thermo          10000
+thermo_style custom step temp pe press enthalpy 
+thermo_modify norm no
+fix avall all ave/time 1 1 1  v_myenthalpy v_mype c_pressk v_myvol  ave running
+
+dump            4 all custom 1 force.atom id type xs ys zs fx fy fz
+rerun           ${atomdir}/dump_all.atom  first 0 every 0 skip 1 &
+dump x y z purge yes replace no add yes 
+dump_modify     4 sort id
+undump          4
+
+variable hTmp equal f_avall[1]
+variable peTmp equal f_avall[2]
+variable pressTmp equal f_avall[3]
+variable volTmp equal f_avall[4]
+
+variable hAve equal ${hTmp}/$(atoms)
+variable peAve equal ${peTmp}/$(atoms)
+variable pressAve equal ${pressTmp}/10000
+variable volAve equal ${volTmp}/$(atoms)
+
+print """{
+  "press":${pressAve},
+  "enthalpy": ${hAve},
+  "natom": $(atoms),
+  "pe_per":${peAve},
+  "vol_per":${volAve}
+}""" file thermo.json screen no
+

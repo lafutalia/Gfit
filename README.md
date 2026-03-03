@@ -31,15 +31,16 @@ Reference
 Please cite our paper if the results are used in your paper.
 
 ```bibtex
-@article{PhysRevB.,
-  title = {},
-  author = {},
+@article{9ctg-8fp7,
+  title = {Incorporating Gibbs free energy into interatomic potential fitting},
+  author = {Wei, Liangrui and Sun, Yang},
   journal = {Phys. Rev. B},
-  volume = {},
-  issue = {},
-  pages = {},
-  numpages = {},
-  year = {},
+  volume = {113},
+  issue = {9},
+  pages = {094103},
+  numpages = {9},
+  year = {2026},
+  month = {Mar},
   publisher = {American Physical Society},
   doi = {10.1103/9ctg-8fp7},
   url = {https://link.aps.org/doi/10.1103/9ctg-8fp7}

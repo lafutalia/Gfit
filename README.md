@@ -17,11 +17,11 @@ You can find installation and usage guides there.
 
 The Gfit distribution includes the following files and directories:
 
-README                     this file
-LICENSE                    the MIT License
-docs-html                  documentation in HTML format
-docs                       source files for documentation
-src_for_FeO                source code for fitting Fe-O EAM potential
+- `README.md` : this file
+- `LICENSE` : the MIT License
+- `docs-html` : documentation in HTML format
+- `docs` : source files for documentation
+- `src_for_FeO` : source code for fitting Fe-O EAM potential
 
 ----------------------------------------------------------------------
 

@@ -25,3 +25,24 @@ src_for_FeO                source code for fitting Fe-O EAM potential
 
 ----------------------------------------------------------------------
 
+Reference
+---------
+
+Please cite our paper if the results are used in your paper.
+
+```bibtex
+@article{PhysRevB.,
+  title = {},
+  author = {},
+  journal = {Phys. Rev. B},
+  volume = {},
+  issue = {},
+  pages = {},
+  numpages = {},
+  year = {},
+  publisher = {American Physical Society},
+  doi = {10.1103/9ctg-8fp7},
+  url = {https://link.aps.org/doi/10.1103/9ctg-8fp7}
+}
+```
+

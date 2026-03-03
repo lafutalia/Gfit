@@ -22,7 +22,8 @@ The Gfit distribution includes the following files and directories:
 README                     this file
 LICENSE                    the MIT License
 docs-html                  documentation in HTML format
-src                        source code for fitting Fe-O EAM potential
+docs                       source files for documentation
+src_for_FeO                source code for fitting Fe-O EAM potential
 
 ----------------------------------------------------------------------
 

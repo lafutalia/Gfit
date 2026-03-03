@@ -31,7 +31,7 @@ Reference
 Please cite our paper if the results are used in your paper.
 
 ```bibtex
-@article{9ctg-8fp7,
+@article{Gfit2026,
   title = {Incorporating Gibbs free energy into interatomic potential fitting},
   author = {Wei, Liangrui and Sun, Yang},
   journal = {Phys. Rev. B},
